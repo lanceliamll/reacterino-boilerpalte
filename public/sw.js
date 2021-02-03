@@ -1,5 +1,6 @@
 // console.log("Hello PWA");
 const CACHE_SITE = 'boilerplate-v4';
+const CACHE_DYNAMIC = 'boilerplate-dynamic-v1';
 const CACHE_ASSETS = [
   "/_snowpack/pkg/react.js",
   "/_snowpack/pkg/react-dom.js",
@@ -45,7 +46,7 @@ self.addEventListener('activate', ev => {
         // Delete Old Cache that is not equal to CACHE_SITE value.
         return Promise.all(
           keys
-            .filter(key => key !== CACHE_SITE)
+            .filter(key => key !== CACHE_SITE && key !== CACHE_DYNAMIC)
             .map(key => caches.delete(key))
         )
       })
@@ -56,12 +57,29 @@ self.addEventListener('activate', ev => {
 self.addEventListener('fetch', ev => {
   console.log("Service Worker Success: Fetching Event", ev);
 
+  // check if request is made by chrome extensions or web page
+  // if request is made for web page url must contains http.
+  if (!(ev.request.url.indexOf('http') === 0)) return; // skip the request. if request is not made with http protocol
+
   // Respond with Caches
   ev.respondWith(
     caches.match(ev.request)
       .then(cacheRes => {
-        // If cache is not available return the request
+        // If cache is not available return the request (fetch)
         return cacheRes || fetch(ev.request)
+          .then(fetchRes => {
+            // Open the Dynamic Cache
+            return caches.open(CACHE_DYNAMIC)
+              .then(cache => {
+                // Put new request on the page to Dynamic Cache
+                cache.put(ev.request.url, fetchRes.clone());
+                return fetchRes;
+              })
+          })
       })
+      // Fallback page
+      // TODO: Needs to Test how this will work on React
+      // NOTE: Might not need
+      .catch(() => caches.match('/dist/components/Offline/index.jsx'))
   )
 })
