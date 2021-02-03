@@ -15,7 +15,23 @@ const CACHE_ASSETS = [
   "/asset-manifest.json",
   "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;1,100;1,300&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;1,200;1,300&display=swap",
   "https://fonts.gstatic.com/s/roboto/v20/KFOiCnqEu92Fr1Mu51QrEz0dL-vwnYh2eg.woff2"
-]
+];
+const CACHE_SIZE = 15;
+
+
+// Limit Cache Size
+const limitCacheSize = (name, size) => {
+  caches.open(name)
+    .then(cache => {
+      cache.keys()
+        .then(keys => {
+          if (keys.length > size) {
+            cache.delete(keys[0])
+              .then(limitCacheSize(name, size))
+          }
+        })
+    })
+}
 
 //Install Service Worker
 self.addEventListener('install', ev => {
@@ -65,21 +81,25 @@ self.addEventListener('fetch', ev => {
   ev.respondWith(
     caches.match(ev.request)
       .then(cacheRes => {
+        console.error(cacheRes, ev.request)
         // If cache is not available return the request (fetch)
         return cacheRes || fetch(ev.request)
           .then(fetchRes => {
+            console.error("I FETCHED!", fetchRes)
             // Open the Dynamic Cache
             return caches.open(CACHE_DYNAMIC)
               .then(cache => {
                 // Put new request on the page to Dynamic Cache
                 cache.put(ev.request.url, fetchRes.clone());
+                // Limit Cache size based on the CACHE_SIZE variable
+                limitCacheSize(CACHE_DYNAMIC, CACHE_SIZE);
                 return fetchRes;
               })
           })
       })
       // Fallback page
       // TODO: Needs to Test how this will work on React
-      // NOTE: Might not need
-      .catch(() => caches.match('/dist/components/Offline/index.jsx'))
+      // NOTE: Might not need because already caching the index.js?
+      .catch(() => caches.match('/dist/components/Offline/index.js'))
   )
 })
