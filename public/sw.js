@@ -81,11 +81,9 @@ self.addEventListener('fetch', ev => {
   ev.respondWith(
     caches.match(ev.request)
       .then(cacheRes => {
-        console.error(cacheRes, ev.request)
         // If cache is not available return the request (fetch)
         return cacheRes || fetch(ev.request)
           .then(fetchRes => {
-            console.error("I FETCHED!", fetchRes)
             // Open the Dynamic Cache
             return caches.open(CACHE_DYNAMIC)
               .then(cache => {
