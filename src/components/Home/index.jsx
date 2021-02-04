@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { InputGroup, FormControl, Button, Card } from 'react-bootstrap';
 import {
   Link
@@ -6,10 +6,12 @@ import {
 import { firestore } from "../../mutations";
 
 
-function Home() {
+function Home(props) {
 
+  // Todo State
+  const [todos, setTodos] = useState([]);
   const [todo, setTodo] = useState("");
-
+  const [fetching, setFetching] = useState(false);
 
   const createTodo = () => {
     firestore.collection('todos').add({ title: 'first todo', isFinished: false })
@@ -21,7 +23,36 @@ function Home() {
       })
   }
 
-  console.error(firebase)
+  useEffect(() => {
+    // Setup Realtime Listener
+    if(!todos.length && !fetching) {
+      firestore.collection('todos')
+      .onSnapshot(snapshot => {
+        // console.error("Hello", snapshot.docChanges());
+        snapshot.docChanges()
+          .forEach(change => {
+            if (change.type === "added") {
+              // Add to state
+              // const data = {
+              //   id: change.doc.id,
+              //   ...change.doc.data()
+              // };
+
+              // console.log("ADDED?", data);
+              // setTodos([...todos, data]);
+
+              console.log("State", todos);
+            }
+
+            if (change.type === "removed") {
+              // Remove on state
+            }
+          })
+      })
+    }
+  }, []);
+
+  console.error(props)
   return (
     <div className="todo-container">
       <Link to="/about">Go to About</Link>
@@ -34,7 +65,7 @@ function Home() {
             aria-describedby="basic-addon2"
           />
           <InputGroup.Append>
-            <Button onClick={createTodo} variant="outline-secondary">Add</Button>
+            {/* <Button onClick={this.createTodo} variant="outline-secondary">Add</Button> */}
           </InputGroup.Append>
         </InputGroup>
       </div>
@@ -42,13 +73,15 @@ function Home() {
 
       <div>
         {/* Data */}
-        <Card>
-          <Card.Body>
-            <Card.Title>Card Title</Card.Title>
-            <Button style={{ marginRight: 10 }}>Edit</Button>
-            <Button>Delete</Button>
-          </Card.Body>
-        </Card>
+        {todos && todos.length > 0 ? todos.map(todo => (
+          <Card>
+            <Card.Body>
+              <Card.Title>{todo.title}</Card.Title>
+              <Button style={{ marginRight: 10 }}>Edit</Button>
+              <Button>Delete</Button>
+            </Card.Body>
+          </Card>
+        )) : <h1>No Todos</h1>}
       </div>
     </div>
   )

@@ -5,12 +5,13 @@ import {
   Switch,
   Route
 } from "react-router-dom";
+import { firestore } from "./mutations";
 import "./App.scss";
 
 function App() {
   return (
     <div>
-       <Router>
+      <Router>
         <Switch>
           <Route path="/about">
             <About />
@@ -19,7 +20,7 @@ function App() {
             <Home />
           </Route>
         </Switch>
-    </Router>
+      </Router>
     </div>
   );
 }

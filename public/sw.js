@@ -78,26 +78,26 @@ self.addEventListener('fetch', ev => {
   if (!(ev.request.url.indexOf('http') === 0)) return; // skip the request. if request is not made with http protocol
 
   // Respond with Caches
-  ev.respondWith(
-    caches.match(ev.request)
-      .then(cacheRes => {
-        // If cache is not available return the request (fetch)
-        return cacheRes || fetch(ev.request)
-          .then(fetchRes => {
-            // Open the Dynamic Cache
-            return caches.open(CACHE_DYNAMIC)
-              .then(cache => {
-                // Put new request on the page to Dynamic Cache
-                cache.put(ev.request.url, fetchRes.clone());
-                // Limit Cache size based on the CACHE_SIZE variable
-                limitCacheSize(CACHE_DYNAMIC, CACHE_SIZE);
-                return fetchRes;
-              })
-          })
-      })
-      // Fallback page
-      // TODO: Needs to Test how this will work on React
-      // NOTE: Might not need because already caching the index.js?
-      .catch(() => caches.match('/dist/components/Offline/index.js'))
-  )
+  // ev.respondWith(
+  //   caches.match(ev.request)
+  //     .then(cacheRes => {
+  //       // If cache is not available return the request (fetch)
+  //       return cacheRes || fetch(ev.request)
+  //         .then(fetchRes => {
+  //           // Open the Dynamic Cache
+  //           return caches.open(CACHE_DYNAMIC)
+  //             .then(cache => {
+  //               // Put new request on the page to Dynamic Cache
+  //               cache.put(ev.request.url, fetchRes.clone());
+  //               // Limit Cache size based on the CACHE_SIZE variable
+  //               limitCacheSize(CACHE_DYNAMIC, CACHE_SIZE);
+  //               return fetchRes;
+  //             })
+  //         })
+  //     })
+  //     // Fallback page
+  //     // TODO: Needs to Test how this will work on React
+  //     // NOTE: Might not need because already caching the index.js?
+  //     .catch(() => caches.match('/dist/components/Offline/index.js'))
+  // )
 })
